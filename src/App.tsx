@@ -1,3 +1,4 @@
+import { useState } from "react";
 import InputToDo from "./test/Inputtodo";
 
 function App() {
@@ -8,16 +9,35 @@ function App() {
     address: "Dn",
   };
 
-  const todos = ["t1", "t2", "t3", "t4", "t5", "t6"];
+  const [listToDo, setListToDo] = useState([
+    "t1",
+    "t2",
+    "t3",
+    "t4",
+    "t5",
+    "t6",
+  ]);
+
+  const handleTest = (getName: string) => {
+    alert(`handle test name = ${getName}`);
+  };
 
   return (
     <div>
       <div className="parent">
         <div className="child"></div>
       </div>
-      <InputToDo name={name} age={age} info={info} />
+      <InputToDo
+        name={name}
+        age={age}
+        info={info}
+        handleTest={handleTest}
+        listToDo={listToDo}
+        setListToDo={setListToDo}
+      />
+      <br style={{border: "1px solid red"}} />
       <ul>
-        {todos.map((item, index) => {
+        {listToDo.map((item, index) => {
           return <li key={index}>{item}</li>;
         })}
       </ul>
@@ -25,4 +45,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
