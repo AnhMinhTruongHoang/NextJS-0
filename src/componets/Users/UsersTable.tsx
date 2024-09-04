@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import { Modal, Input } from "antd";
+import { Modal, Input, notification, Descriptions } from "antd";
 import { PlusCircleOutlined } from "@ant-design/icons";
 import { Value } from "sass";
+import { DescriptionsContext } from "antd/es/descriptions";
 
 // Định nghĩa interface cho đối tượng Users (người dùng)
 interface IUsers {
@@ -16,6 +17,11 @@ interface IUsers {
 // Hàm component chính hiển thị bảng người dùng
 const UsersTable = () => {
   // Sử dụng hook useState để khai báo một state listUsers lưu danh sách người dùng
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  ////////////////////
+  const access_token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0b2tlbiBsb2dpbiIsImlzcyI6ImZyb20gc2VydmVyIiwiX2lkIjoiNjZkNWQ5YzUzNzlhNmVhNzlkODJhY2I5IiwiZW1haWwiOiJhZG1pbkBnbWFpbC5jb20iLCJhZGRyZXNzIjoiVmlldE5hbSIsImlzVmVyaWZ5Ijp0cnVlLCJuYW1lIjoiSSdtIGFkbWluIiwidHlwZSI6IlNZU1RFTSIsInJvbGUiOiJBRE1JTiIsImdlbmRlciI6Ik1BTEUiLCJhZ2UiOjY5LCJpYXQiOjE3MjUzNzUxNjYsImV4cCI6MTgxMTc3NTE2Nn0.5C8V5Qmd2OrEW2_WkVvdjjVTr2ZZSeYO6ttbUcgvGI4";
+  //////////////////////////////
   const [listUsers, setListUsers] = useState<IUsers[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,8 +39,6 @@ const UsersTable = () => {
   ///////////////// Hàm lấy dữ liệu người dùng
   const getData = async () => {
     // Chuỗi access_token sử dụng để xác thực khi gọi API
-    const access_token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0b2tlbiBsb2dpbiIsImlzcyI6ImZyb20gc2VydmVyIiwiX2lkIjoiNjZkNWQ5YzUzNzlhNmVhNzlkODJhY2I5IiwiZW1haWwiOiJhZG1pbkBnbWFpbC5jb20iLCJhZGRyZXNzIjoiVmlldE5hbSIsImlzVmVyaWZ5Ijp0cnVlLCJuYW1lIjoiSSdtIGFkbWluIiwidHlwZSI6IlNZU1RFTSIsInJvbGUiOiJBRE1JTiIsImdlbmRlciI6Ik1BTEUiLCJhZ2UiOjY5LCJpYXQiOjE3MjUzNzUxNjYsImV4cCI6MTgxMTc3NTE2Nn0.5C8V5Qmd2OrEW2_WkVvdjjVTr2ZZSeYO6ttbUcgvGI4";
 
     //////////// Gọi API để lấy toàn bộ người dùng
     const res = await fetch("http://localhost:8000/api/v1/users/all", {
@@ -42,11 +46,6 @@ const UsersTable = () => {
         Authorization: `Bearer ${access_token}`, // Gửi token trong header để xác thực
         "Content-Type": "application/json",
       },
-      // method: "POST",
-      // body: JSON.stringify({
-      //   username: "hoidanit@gmail.com",
-      //   password: "123456",
-      // }),
     });
 
     // Chuyển đổi phản hồi từ API thành JSON
@@ -91,13 +90,8 @@ const UsersTable = () => {
     },
   ];
   //////////////// modal pop up !
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleOk = () => {
+  const handleOk = async () => {
     const data = {
       name,
       email,
@@ -107,14 +101,45 @@ const UsersTable = () => {
       address,
       role,
     };
-    console.log('dd',data);
-    // setIsModalOpen(false);
+    console.log("dd", data);
+
+    const res = await fetch("http://localhost:8000/api/v1/users", {
+      headers: {
+        Authorization: `Bearer ${access_token}`, // Gửi token trong header để xác thực
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify({ ...data }),
+    });
+
+    // Chuyển đổi phản hồi từ API thành JSON
+    const d = await res.json();
+    if (d.data) {
+      await getData();
+      notification.success({
+        message: "Tạo mới user thành công",
+      });
+      setIsModalOpen(false);
+    } else {
+      notification.error({
+        message: "Có lỗi xẩy ra",
+        description: JSON.stringify(d.message),
+      });
+    }
   };
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
   ////////////////
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setName("");
+    setEmail("");
+    setAge("");
+    setAddress("");
+    setRole("");
+    setGender("");
+    setPassword("");
+  };
   return (
     <div>
       <div
@@ -127,7 +152,7 @@ const UsersTable = () => {
         <h2 style={{ color: "greenyellow" }}> Table Users</h2>
         <div>
           <PlusCircleOutlined
-            onClick={showModal}
+            onClick={() => setIsModalOpen(true)}
             style={{ color: "green", fontSize: "24px" }}
             spin={true}
           >
@@ -141,7 +166,7 @@ const UsersTable = () => {
         title="Basic Modal"
         open={isModalOpen}
         onOk={handleOk}
-        onCancel={handleCancel}
+        onCancel={() => handleCloseModal()}
         maskClosable={false}
       >
         <div>
