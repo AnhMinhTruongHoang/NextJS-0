@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
+import { Modal, Input } from "antd";
+import { PlusCircleOutlined } from "@ant-design/icons";
+import { Value } from "sass";
 
 // Định nghĩa interface cho đối tượng Users (người dùng)
 interface IUsers {
@@ -14,6 +17,13 @@ interface IUsers {
 const UsersTable = () => {
   // Sử dụng hook useState để khai báo một state listUsers lưu danh sách người dùng
   const [listUsers, setListUsers] = useState<IUsers[]>([]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [address, setAddress] = useState("");
+  const [role, setRole] = useState("");
 
   // Sử dụng hook useEffect để gọi hàm getData() một lần khi component được render
   useEffect(() => {
@@ -60,7 +70,15 @@ const UsersTable = () => {
         /////// chuyen doi text thanh duong dan link dung the a
         console.log("check col", value, record);
         ///////  check xem value , record la gi ?
-        return <a href="https://ant.design/components/table">{record.email}</a>;
+        return (
+          <a
+            href="https://ant.design/components/table"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {record.email}
+          </a>
+        );
       },
     },
     {
@@ -72,11 +90,107 @@ const UsersTable = () => {
       dataIndex: "role",
     },
   ];
+  //////////////// modal pop up !
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    const data = {
+      name,
+      email,
+      password,
+      age,
+      gender,
+      address,
+      role,
+    };
+    console.log('dd',data);
+    // setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+  ////////////////
   return (
     <div>
-      <h2> Table Users</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h2 style={{ color: "greenyellow" }}> Table Users</h2>
+        <div>
+          <PlusCircleOutlined
+            onClick={showModal}
+            style={{ color: "green", fontSize: "24px" }}
+            spin={true}
+          >
+            Add new
+          </PlusCircleOutlined>
+        </div>
+      </div>
       <Table columns={columns} dataSource={listUsers} rowKey={"_id"} />
+
+      <Modal ////////// modal pop up !
+        title="Basic Modal"
+        open={isModalOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        maskClosable={false}
+      >
+        <div>
+          <label>Name:</label>
+          <Input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </div>
+        <div>
+          <label>Email:</label>
+          <Input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </div>
+        <div>
+          <label>Password:</label>
+          <Input
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
+        <div>
+          <label>Age:</label>
+          <Input value={age} onChange={(event) => setAge(event.target.value)} />
+        </div>
+        <div>
+          <label>Gender:</label>
+          <Input
+            value={gender}
+            onChange={(event) => setGender(event.target.value)}
+          />
+        </div>
+        <div>
+          <label>Address:</label>
+          <Input
+            value={address}
+            onChange={(event) => setAddress(event.target.value)}
+          />
+        </div>
+        <div>
+          <label>Role:</label>
+          <Input
+            value={role}
+            onChange={(event) => setRole(event.target.value)}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };
