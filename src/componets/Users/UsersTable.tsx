@@ -21,9 +21,7 @@ export interface IUsers {
 // Hàm component chính hiển thị bảng người dùng
 const UsersTable = () => {
   // Chuỗi token để xác thực khi gọi API
-  const access_token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0b2tlbiBsb2dpbiIsImlzcyI6ImZyb20gc2VydmVyIiwiX2lkIjoiNjZkNWQ5YzUzNzlhNmVhNzlkODJhY2I5IiwiZW1haWwiOiJhZG1pbkBnbWFpbC5jb20iLCJhZGRyZXNzIjoiVmlldE5hbSIsImlzVmVyaWZ5Ijp0cnVlLCJuYW1lIjoiSSdtIGFkbWluIiwidHlwZSI6IlNZU1RFTSIsInJvbGUiOiJBRE1JTiIsImdlbmRlciI6Ik1BTEUiLCJhZ2UiOjY5LCJpYXQiOjE3MjUzNzUxNjYsImV4cCI6MTgxMTc3NTE2Nn0.5C8V5Qmd2OrEW2_WkVvdjjVTr2ZZSeYO6ttbUcgvGI4";
-
+  const access_token = localStorage.getItem("access_token") as string;
   // State để điều khiển việc mở modal tạo mới người dùng
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -36,6 +34,13 @@ const UsersTable = () => {
   // State lưu dữ liệu người dùng cần cập nhật
   const [dataUpdate, setDataUpdate] = useState<null | IUsers>(null);
 
+  const [meta, setMeta] = useState({
+    current: 1,
+    pageSize: 2,
+    pages: 0,
+    total: 0,
+  });
+
   // Sử dụng useEffect để gọi hàm lấy dữ liệu ngay khi component được render
   useEffect(() => {
     getData();
@@ -44,12 +49,15 @@ const UsersTable = () => {
   // Hàm lấy dữ liệu người dùng từ API
   const getData = async () => {
     // Gọi API để lấy toàn bộ danh sách người dùng
-    const res = await fetch("http://localhost:8000/api/v1/users/all", {
-      headers: {
-        Authorization: `Bearer ${access_token}`, // Gửi token trong header để xác thực
-        "Content-Type": "application/json",
-      },
-    });
+    const res = await fetch(
+      `http://localhost:8000/api/v1/users?current=${meta.current}&pageSize=${meta.pageSize}`,
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`, // Gửi token trong header để xác thực
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     // Chuyển đổi phản hồi từ API thành JSON
     const d = await res.json();
@@ -63,10 +71,17 @@ const UsersTable = () => {
 
     // Cập nhật state listUsers với dữ liệu người dùng nhận được từ API
     setListUsers(d.data.result);
+    setMeta({
+      current: d.data.meta.current,
+      pageSize: d.data.meta.pageSize,
+      pages: d.data.meta.pages,
+      total: d.data.meta.total,
+    });
 
     // Kiểm tra danh sách người dùng qua console log
     console.log("check listUsers", listUsers);
   };
+  /////////////
   const confirm = async (user: IUsers) => {
     const res = await fetch(`http://localhost:8000/api/v1/users/${user._id}`, {
       method: "DELETE",
@@ -147,7 +162,36 @@ const UsersTable = () => {
       },
     },
   ];
+  const handleOnChange = async (page: number, pageSize: number) => {
+    const res = await fetch(
+      `http://localhost:8000/api/v1/users?current=${page}&pageSize=${pageSize}`,
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`, // Gửi token trong header để xác thực
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
+    // Chuyển đổi phản hồi từ API thành JSON
+    const d = await res.json();
+
+    // Kiểm tra nếu không có dữ liệu trả về thì thông báo lỗi
+    if (!d.data) {
+      notification.error({
+        message: JSON.stringify(d.message),
+      });
+    }
+
+    // Cập nhật state listUsers với dữ liệu người dùng nhận được từ API
+    setListUsers(d.data.result);
+    setMeta({
+      current: d.data.meta.current,
+      pageSize: d.data.meta.pageSize,
+      pages: d.data.meta.pages,
+      total: d.data.meta.total,
+    });
+  };
   // Trả về giao diện bảng người dùng và các modal
   return (
     <div>
@@ -170,7 +214,21 @@ const UsersTable = () => {
       </div>
 
       {/* Bảng hiển thị danh sách người dùng */}
-      <Table columns={columns} dataSource={listUsers} rowKey={"_id"} />
+      <Table
+        columns={columns}
+        dataSource={listUsers}
+        rowKey={"_id"}
+        pagination={{
+          current: meta.current,
+          pageSize: meta.pageSize,
+          total: meta.total,
+          showTotal: (total, range) =>
+            `${range[0]} - ${[0]} of  ${total} items`,
+          onChange: (page: number, pageSize: number) =>
+            handleOnChange(page, pageSize),
+          showSizeChanger: true,
+        }}
+      />
 
       {/* Modal tạo mới người dùng */}
       <CreateUserModal

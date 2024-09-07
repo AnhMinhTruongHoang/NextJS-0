@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./App.scss";
@@ -50,6 +50,32 @@ const Header = () => {
 };
 ////////////////////////
 const LayoutAdmin = () => {
+  const getData = async () => {
+    // Gọi API để lấy toàn bộ danh sách người dùng
+    const res = await fetch("http://localhost:8000/api/v1/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: "hoidanit@gmail.com",
+        password: "123456",
+      }),
+    });
+
+    // Chuyển đổi phản hồi từ API thành JSON
+    const d = await res.json();
+
+    // Kiểm tra nếu không có dữ liệu trả về thì thông báo lỗi
+    if (d.data) {
+      localStorage.setItem("access_token", d.data.access_token);
+    }
+  };
+
+  ///////////
+  useEffect(() => {
+    getData();
+  }, []);
   return (
     <div>
       <Header />

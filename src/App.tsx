@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InputToDo from "./componets/Users/Inputtodo";
 
 function App() {
@@ -35,7 +35,7 @@ function App() {
         listToDo={listToDo}
         setListToDo={setListToDo}
       />
-      <br style={{border: "1px solid red"}} />
+      <br style={{ border: "1px solid red" }} />
       <ul>
         {listToDo.map((item, index) => {
           return <li key={index}>{item}</li>;
